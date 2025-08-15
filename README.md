@@ -1,1 +1,0 @@
-# mcgillkwok.github.io
