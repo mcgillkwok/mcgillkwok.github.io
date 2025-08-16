@@ -1,471 +1,881 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel 合并工具</title>
+    <title>医疗器械不良事件数据统计分析系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * {
             margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-        }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            margin: 20px 0;
-            background: rgba(102, 126, 234, 0.05);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .upload-area:hover {
-            border-color: #764ba2;
-            background: rgba(118, 75, 162, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .upload-area.dragover {
-            border-color: #764ba2;
-            background: rgba(118, 75, 162, 0.15);
-            transform: scale(1.02);
-        }
-        
-        input[type="file"] {
-            display: none;
-        }
-        
-        .file-input-label {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            display: inline-block;
-            margin: 10px;
-        }
-        
-        .file-input-label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .option-group {
-            background: rgba(240, 242, 247, 0.8);
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-        }
-        
-        .option-group h3 {
-            margin-top: 0;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        
-        input[type="text"], select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
+            padding: 0;
             box-sizing: border-box;
         }
         
-        input[type="text"]:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f7fa;
+            line-height: 1.6;
         }
         
-        .merge-btn {
-            width: 100%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 20px 0;
-        }
-        
-        .merge-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-        }
-        
-        .merge-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .file-list {
-            margin: 20px 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: rgba(102, 126, 234, 0.1);
-            margin: 5px 0;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .file-item .remove-btn {
-            background: #ff4757;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .result {
-            margin-top: 30px;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
             padding: 20px;
-            background: rgba(240, 242, 247, 0.9);
-            border-radius: 15px;
-            border-left: 5px solid #667eea;
-            white-space: pre-wrap;
-            font-family: monospace;
-            max-height: 300px;
-            overflow-y: auto;
         }
         
-        .progress {
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background-color: #f8f9ff;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload:hover {
+            border-color: #764ba2;
+            background-color: #f0f2ff;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .time-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .time-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .time-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .export-section {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .export-btn {
+            padding: 10px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stats-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 15px;
+        }
+        
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        .data-table {
             width: 100%;
-            height: 8px;
-            background: #f0f0f0;
-            border-radius: 4px;
-            margin: 10px 0;
-            overflow: hidden;
+            border-collapse: collapse;
+            margin-top: 15px;
         }
         
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-radius: 4px;
-            transition: width 0.3s ease;
-            width: 0%;
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
-
-        @media (max-width: 768px) {
-            .options {
-                grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Excel 合并工具</h1>
-        
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-            <h3>拖拽 Excel 文件到这里或点击选择</h3>
-            <p>支持 .xlsx 和 .xls 文件</p>
-            <label for="fileInput" class="file-input-label">选择文件</label>
-            <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+        <div class="header">
+            <h1>医疗器械不良事件数据统计分析系统</h1>
+            <p>支持Excel/CSV文件上传，提供多维度数据统计和可视化分析</p>
         </div>
         
-        <div class="file-list" id="fileList"></div>
-        
-        <div class="options">
-            <div class="option-group">
-                <h3>📋 列选择</h3>
-                <input type="text" id="columns" placeholder="留空表示所有列，或输入：列A,列B,列C">
-                <small>指定要合并的列名，用逗号分隔</small>
-            </div>
-            
-            <div class="option-group">
-                <h3>🔍 数据筛选</h3>
-                <input type="text" id="filter" placeholder="列名=值,列名2=值2">
-                <small>按条件筛选数据行</small>
-            </div>
-            
-            <div class="option-group">
-                <h3>🔄 重复列处理</h3>
-                <select id="dupStrategy">
-                    <option value="auto_rename">自动重命名 (列名, 列名_2, ...)</option>
-                    <option value="keep_first">保留第一个</option>
-                    <option value="merge_same">合并同名列</option>
-                </select>
-            </div>
-            
-            <div class="option-group">
-                <h3>🔗 合并分隔符</h3>
-                <input type="text" id="mergeDelimiter" value=" | " placeholder=" | ">
-                <small>合并同名列时使用的分隔符</small>
+        <div class="upload-section">
+            <div class="file-upload" id="fileUpload">
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                <p style="margin-bottom: 15px; color: #666;">
+                    <strong>点击选择文件或拖拽文件到此处</strong><br>
+                    支持 Excel (.xlsx, .xls) 和 CSV 格式
+                </p>
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    选择文件
+                </button>
             </div>
         </div>
         
-        <button class="merge-btn" onclick="mergeExcelFiles()" id="mergeBtn" disabled>
-            🚀 开始合并
-        </button>
-        
-        <div class="progress" id="progressContainer" style="display: none;">
-            <div class="progress-bar" id="progressBar"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在处理数据，请稍候...</p>
         </div>
         
-        <div class="result" id="result" style="display: none;"></div>
+        <div class="controls" id="controls">
+            <div class="time-selector">
+                <button class="time-btn active" data-period="month">月份统计</button>
+                <button class="time-btn" data-period="quarter">季度统计</button>
+                <button class="time-btn" data-period="year">年份统计</button>
+            </div>
+            <div class="export-section">
+                <button class="export-btn" onclick="exportToExcel()">导出Excel</button>
+                <button class="export-btn" onclick="exportToCSV()">导出CSV</button>
+            </div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid" style="display: none;">
+            <div class="stats-card">
+                <h3>报告总数量统计</h3>
+                <div id="totalStats"></div>
+                <div class="chart-container">
+                    <canvas id="totalChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <h3>审核状态统计</h3>
+                <div id="statusStats"></div>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <h3>产品类别统计（审核通过）</h3>
+                <div id="categoryStats"></div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <h3>伤害类型统计（审核通过）</h3>
+                <div id="injuryStats"></div>
+                <div class="chart-container">
+                    <canvas id="injuryChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <h3>报告人统计汇总</h3>
+                <div id="reporterTable"></div>
+            </div>
+        </div>
+        
+        <div class="table-container" id="productTable" style="display: none;">
+            <h3>产品名称统计汇总（审核通过）</h3>
+            <div class="time-selector" style="margin-bottom: 20px;">
+                <button class="time-btn active" data-category="all" id="categoryAllBtn">全部</button>
+                <button class="time-btn" data-category="有源" id="categoryActiveBtn">有源</button>
+                <button class="time-btn" data-category="无源" id="categoryPassiveBtn">无源</button>
+            </div>
+            <div id="productStats"></div>
+        </div>
     </div>
 
     <script>
-        let selectedFiles = [];
-
-        // 文件拖放功能
-        const uploadArea = document.querySelector('.upload-area');
+        let rawData = [];
+        let processedData = {};
+        let currentPeriod = 'month';
+        let currentCategory = 'all';
+        let charts = {};
         
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
+        // 文件上传处理
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+        document.getElementById('fileUpload').addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
+            e.currentTarget.style.backgroundColor = '#f0f2ff';
         });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
+        document.getElementById('fileUpload').addEventListener('dragleave', (e) => {
+            e.currentTarget.style.backgroundColor = '#f8f9ff';
         });
-
-        function highlight(e) {
-            uploadArea.classList.add('dragover');
-        }
-
-        function unhighlight(e) {
-            uploadArea.classList.remove('dragover');
-        }
-
-        uploadArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            handleFiles(e.target.files);
+        document.getElementById('fileUpload').addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.currentTarget.style.backgroundColor = '#f8f9ff';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
         });
-
-        function handleFiles(files) {
-            ([...files]).forEach(file => {
-                if (file.name.match(/\.(xlsx|xls)$/i)) {
-                    selectedFiles.push(file);
-                }
-            });
-            updateFileList();
-            updateMergeButton();
-        }
-
-        function updateFileList() {
-            const fileList = document.getElementById('fileList');
-            fileList.innerHTML = '';
-            
-            selectedFiles.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <span>📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                    <button class="remove-btn" onclick="removeFile(${index})">移除</button>
-                `;
-                fileList.appendChild(fileItem);
-            });
-        }
-
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-            updateMergeButton();
-        }
-
-        function updateMergeButton() {
-            const mergeBtn = document.getElementById('mergeBtn');
-            mergeBtn.disabled = selectedFiles.length === 0;
-        }
-
-        async function mergeExcelFiles() {
-            if (selectedFiles.length === 0) return;
-
-            const result = document.getElementById('result');
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const mergeBtn = document.getElementById('mergeBtn');
-
-            // 显示进度条
-            progressContainer.style.display = 'block';
-            result.style.display = 'block';
-            result.textContent = '🔄 正在处理文件...\n';
-            mergeBtn.disabled = true;
-
-            try {
-                const columns = document.getElementById('columns').value.trim();
-                const filter = document.getElementById('filter').value.trim();
-                const dupStrategy = document.getElementById('dupStrategy').value;
-                const mergeDelimiter = document.getElementById('mergeDelimiter').value || ' | ';
-
-                // 解析筛选条件
-                const filterMap = {};
-                if (filter) {
-                    filter.split(',').forEach(pair => {
-                        const [key, value] = pair.split('=');
-                        if (key && value) {
-                            filterMap[key.trim()] = value.trim();
-                        }
-                    });
-                }
-
-                // 解析列选择
-                const selectedColumns = columns ? columns.split(',').map(c => c.trim()) : null;
-
-                let allData = [];
-                let headers = [];
-                let totalRows = 0;
-
-                // 处理每个文件
-                for (let i = 0; i < selectedFiles.length; i++) {
-                    const file = selectedFiles[i];
-                    progressBar.style.width = `${((i) / selectedFiles.length) * 100}%`;
-                    result.textContent += `正在处理: ${file.name}\n`;
-
-                    const data = await readExcelFile(file);
-                    if (data && data.length > 0) {
-                        const fileHeaders = data[0];
-                        const fileData = data.slice(1);
-
-                        // 设置表头（第一个文件）
-                        if (headers.length === 0) {
-                            headers = selectedColumns ? 
-                                selectedColumns.filter(col => fileHeaders.includes(col)) : 
-                                fileHeaders;
-                        }
-
-                        // 处理数据
-                        fileData.forEach(row => {
-                            // 应用筛选条件
-                            let passFilter = true;
-                            for (const [filterCol, filterVal] of Object.entries(filterMap)) {
-                                const colIndex = fileHeaders.indexOf(filterCol);
-                                if (colIndex >= 0 && row[colIndex] !== filterVal) {
-                                    passFilter = false;
-                                    break;
-                                }
-                            }
-
-                            if (passFilter) {
-                                // 按选定列提取数据
-                                const processedRow = headers.map(header => {
-                                    const colIndex = fileHeaders.indexOf(header);
-                                    return colIndex >= 0 ? (row[colIndex] || '') : '';
-                                });
-                                allData.push(processedRow);
-                                totalRows++;
-                            }
-                        });
+        
+        // 时间维度切换
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (e.target.dataset.period) {
+                    // 时间维度切换
+                    document.querySelectorAll('.time-btn[data-period]').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentPeriod = e.target.dataset.period;
+                    if (rawData.length > 0) {
+                        processData();
+                        updateAllCharts();
+                    }
+                } else if (e.target.dataset.category) {
+                    // 产品类别切换
+                    document.querySelectorAll('.time-btn[data-category]').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentCategory = e.target.dataset.category;
+                    if (rawData.length > 0) {
+                        updateProductTable();
                     }
                 }
-
-                progressBar.style.width = '100%';
-
-                // 创建工作簿
-                const ws = XLSX.utils.aoa_to_sheet([headers, ...allData]);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "合并结果");
-
-                // 下载文件
-                const fileName = `合并结果_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xlsx`;
-                XLSX.writeFile(wb, fileName);
-
-                result.textContent += `\n✅ 合并完成！\n`;
-                result.textContent += `📊 处理了 ${selectedFiles.length} 个文件\n`;
-                result.textContent += `📋 合并了 ${totalRows} 行数据\n`;
-                result.textContent += `💾 文件已保存: ${fileName}\n`;
-
-            } catch (error) {
-                result.textContent += `\n❌ 错误: ${error.message}\n`;
-            } finally {
-                mergeBtn.disabled = false;
-                setTimeout(() => {
-                    progressContainer.style.display = 'none';
-                }, 2000);
+            });
+        });
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
             }
         }
-
-        function readExcelFile(file) {
-            return new Promise((resolve, reject) => {
+        
+        function handleFile(file) {
+            document.getElementById('loading').style.display = 'block';
+            
+            const fileName = file.name.toLowerCase();
+            
+            if (fileName.endsWith('.csv')) {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    dynamicTyping: false,
+                    complete: function(results) {
+                        rawData = results.data;
+                        processAndDisplay();
+                    },
+                    error: function(error) {
+                        alert('CSV文件解析失败: ' + error.message);
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                });
+            } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
+                        const workbook = XLSX.read(data, {type: 'array'});
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                        resolve(jsonData);
+                        rawData = XLSX.utils.sheet_to_json(worksheet, {defval: ''});
+                        processAndDisplay();
                     } catch (error) {
-                        reject(error);
+                        alert('Excel文件解析失败: ' + error.message);
+                        document.getElementById('loading').style.display = 'none';
                     }
                 };
-                reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
+            } else {
+                alert('请选择Excel或CSV文件');
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        function processAndDisplay() {
+            try {
+                if (rawData.length === 0) {
+                    alert('文件中没有找到有效数据');
+                    return;
+                }
+                
+                processData();
+                updateAllCharts();
+                
+                document.getElementById('controls').style.display = 'block';
+                document.getElementById('statsGrid').style.display = 'grid';
+                document.getElementById('productTable').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+                
+            } catch (error) {
+                console.error('数据处理错误:', error);
+                alert('数据处理失败，请检查文件格式是否正确');
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        function processData() {
+            processedData = {
+                total: {},
+                status: {},
+                category: {},
+                injury: {},
+                reporter: {},
+                product: {
+                    all: {},
+                    有源: {},
+                    无源: {}
+                }
+            };
+            
+            // 清理和验证数据
+            const validData = rawData.filter(row => {
+                return row['报告日期'] && row['报告日期'].toString().trim();
             });
+            
+            validData.forEach(row => {
+                const date = parseDate(row['报告日期']);
+                if (!date) return;
+                
+                const period = getPeriodKey(date, currentPeriod);
+                const status = (row['经营企业使用单位报告状态'] || '').toString().trim();
+                const category = (row['产品类别'] || '').toString().trim();
+                const injury = (row['伤害'] || '').toString().trim();
+                const reporter = (row['报告人'] || '').toString().trim();
+                const product = (row['产品名称'] || '').toString().trim();
+                
+                // 1. 总数量统计
+                if (!processedData.total[period]) processedData.total[period] = 0;
+                processedData.total[period]++;
+                
+                // 2. 审核状态统计
+                if (!processedData.status[period]) processedData.status[period] = {};
+                if (status) {
+                    if (!processedData.status[period][status]) processedData.status[period][status] = 0;
+                    processedData.status[period][status]++;
+                }
+                
+                // 3. 产品类别统计（仅审核通过）
+                if (status === '审核通过' && category) {
+                    if (!processedData.category[period]) processedData.category[period] = {};
+                    if (!processedData.category[period][category]) processedData.category[period][category] = 0;
+                    processedData.category[period][category]++;
+                }
+                
+                // 4. 伤害统计（仅审核通过）
+                if (status === '审核通过' && injury) {
+                    if (!processedData.injury[period]) processedData.injury[period] = {};
+                    if (!processedData.injury[period][injury]) processedData.injury[period][injury] = 0;
+                    processedData.injury[period][injury]++;
+                }
+                
+                // 5. 报告人统计
+                if (reporter) {
+                    if (!processedData.reporter[reporter]) processedData.reporter[reporter] = 0;
+                    processedData.reporter[reporter]++;
+                }
+                
+                // 6. 产品名称统计（仅审核通过）
+                if (status === '审核通过' && product) {
+                    // 全部产品统计
+                    if (!processedData.product.all[product]) processedData.product.all[product] = 0;
+                    processedData.product.all[product]++;
+                    
+                    // 按产品类别统计
+                    if (category === '有源' || category === '无源') {
+                        if (!processedData.product[category][product]) processedData.product[category][product] = 0;
+                        processedData.product[category][product]++;
+                    }
+                }
+            });
+        }
+        
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            const str = dateStr.toString().trim();
+            
+            // 处理多种日期格式
+            const formats = [
+                /(\d{4})-(\d{1,2})-(\d{1,2})/,  // 2025-06-20
+                /(\d{4})\/(\d{1,2})\/(\d{1,2})/,  // 2025/06/20
+                /(\d{1,2})\/(\d{1,2})\/(\d{4})/,  // 06/20/2025
+            ];
+            
+            for (let format of formats) {
+                const match = str.match(format);
+                if (match) {
+                    let year, month, day;
+                    if (format === formats[2]) { // MM/DD/YYYY
+                        month = parseInt(match[1]);
+                        day = parseInt(match[2]);
+                        year = parseInt(match[3]);
+                    } else { // YYYY-MM-DD or YYYY/MM/DD
+                        year = parseInt(match[1]);
+                        month = parseInt(match[2]);
+                        day = parseInt(match[3]);
+                    }
+                    
+                    const date = new Date(year, month - 1, day);
+                    if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+                        return date;
+                    }
+                }
+            }
+            return null;
+        }
+        
+        function getPeriodKey(date, period) {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            
+            switch(period) {
+                case 'month':
+                    return `${year}-${month.toString().padStart(2, '0')}`;
+                case 'quarter':
+                    const quarter = Math.ceil(month / 3);
+                    return `${year}-Q${quarter}`;
+                case 'year':
+                    return year.toString();
+                default:
+                    return `${year}-${month.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        function updateAllCharts() {
+            updateTotalChart();
+            updateStatusChart();
+            updateCategoryChart();
+            updateInjuryChart();
+            updateReporterTable();
+            updateProductTable();
+        }
+        
+        function createChart(ctx, type, data, options = {}) {
+            const chartId = ctx.canvas.id;
+            if (charts[chartId]) {
+                charts[chartId].destroy();
+            }
+            
+            const defaultOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value;
+                        },
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            };
+            
+            charts[chartId] = new Chart(ctx, {
+                type: type,
+                data: data,
+                options: {...defaultOptions, ...options},
+                plugins: [{
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        chart.data.datasets.forEach(function(dataset, i) {
+                            const meta = chart.getDatasetMeta(i);
+                            if (!meta.hidden) {
+                                meta.data.forEach(function(element, index) {
+                                    ctx.fillStyle = '#333';
+                                    ctx.font = 'bold 12px Arial';
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+                                    
+                                    const dataString = dataset.data[index].toString();
+                                    const position = element.tooltipPosition();
+                                    
+                                    if (chart.config.options.indexAxis === 'y') {
+                                        // 水平条形图
+                                        ctx.textAlign = 'left';
+                                        ctx.fillText(dataString, position.x + 5, position.y + 3);
+                                    } else {
+                                        // 垂直柱状图
+                                        ctx.fillText(dataString, position.x, position.y - 5);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }]
+            });
+        }
+        
+        function updateTotalChart() {
+            const data = processedData.total;
+            const periods = Object.keys(data).sort();
+            const values = periods.map(p => data[p]);
+            
+            const ctx = document.getElementById('totalChart').getContext('2d');
+            createChart(ctx, 'bar', {
+                labels: periods,
+                datasets: [{
+                    label: '报告数量',
+                    data: values,
+                    backgroundColor: '#667eea',
+                    borderColor: '#667eea',
+                    borderWidth: 1
+                }]
+            });
+            
+            // 更新统计文字
+            document.getElementById('totalStats').innerHTML = `
+                <p>总计：${values.reduce((a, b) => a + b, 0)} 条报告</p>
+                <p>时间范围：${periods.length > 0 ? periods[0] + ' 至 ' + periods[periods.length - 1] : '无数据'}</p>
+            `;
+        }
+        
+        function updateStatusChart() {
+            const data = processedData.status;
+            const periods = Object.keys(data).sort();
+            
+            if (periods.length === 0) return;
+            
+            const statusTypes = new Set();
+            periods.forEach(p => {
+                Object.keys(data[p] || {}).forEach(s => statusTypes.add(s));
+            });
+            
+            const datasets = Array.from(statusTypes).map((status, index) => ({
+                label: status,
+                data: periods.map(p => (data[p] && data[p][status]) || 0),
+                backgroundColor: index === 0 ? '#28a745' : '#dc3545',
+                borderColor: index === 0 ? '#28a745' : '#dc3545',
+                borderWidth: 1
+            }));
+            
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            createChart(ctx, 'bar', {
+                labels: periods,
+                datasets: datasets
+            });
+            
+            // 更新统计文字
+            let statsHtml = '';
+            statusTypes.forEach(status => {
+                const total = periods.reduce((sum, p) => sum + ((data[p] && data[p][status]) || 0), 0);
+                statsHtml += `<p>${status}：${total} 条</p>`;
+            });
+            document.getElementById('statusStats').innerHTML = statsHtml;
+        }
+        
+        function updateCategoryChart() {
+            const data = processedData.category;
+            const periods = Object.keys(data).sort();
+            
+            if (periods.length === 0) {
+                document.getElementById('categoryStats').innerHTML = '<p>无审核通过数据</p>';
+                return;
+            }
+            
+            const categoryTypes = new Set();
+            periods.forEach(p => {
+                Object.keys(data[p] || {}).forEach(c => categoryTypes.add(c));
+            });
+            
+            const datasets = Array.from(categoryTypes).map((category, index) => ({
+                label: category,
+                data: periods.map(p => (data[p] && data[p][category]) || 0),
+                backgroundColor: index === 0 ? '#17a2b8' : '#ffc107',
+                borderColor: index === 0 ? '#17a2b8' : '#ffc107',
+                borderWidth: 1
+            }));
+            
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            createChart(ctx, 'bar', {
+                labels: periods,
+                datasets: datasets
+            });
+            
+            // 更新统计文字
+            let statsHtml = '';
+            categoryTypes.forEach(category => {
+                const total = periods.reduce((sum, p) => sum + ((data[p] && data[p][category]) || 0), 0);
+                statsHtml += `<p>${category}：${total} 条</p>`;
+            });
+            document.getElementById('categoryStats').innerHTML = statsHtml;
+        }
+        
+        function updateInjuryChart() {
+            const data = processedData.injury;
+            const periods = Object.keys(data).sort();
+            
+            if (periods.length === 0) {
+                document.getElementById('injuryStats').innerHTML = '<p>无审核通过数据</p>';
+                return;
+            }
+            
+            const injuryTypes = new Set();
+            periods.forEach(p => {
+                Object.keys(data[p] || {}).forEach(i => injuryTypes.add(i));
+            });
+            
+            const datasets = Array.from(injuryTypes).map((injury, index) => ({
+                label: injury,
+                data: periods.map(p => (data[p] && data[p][injury]) || 0),
+                backgroundColor: index === 0 ? '#fd7e14' : '#e83e8c',
+                borderColor: index === 0 ? '#fd7e14' : '#e83e8c',
+                borderWidth: 1
+            }));
+            
+            const ctx = document.getElementById('injuryChart').getContext('2d');
+            createChart(ctx, 'bar', {
+                labels: periods,
+                datasets: datasets
+            });
+            
+            // 更新统计文字
+            let statsHtml = '';
+            injuryTypes.forEach(injury => {
+                const total = periods.reduce((sum, p) => sum + ((data[p] && data[p][injury]) || 0), 0);
+                statsHtml += `<p>${injury}：${total} 条</p>`;
+            });
+            document.getElementById('injuryStats').innerHTML = statsHtml;
+        }
+        
+        function updateReporterTable() {
+            const data = processedData.reporter;
+            const reporters = Object.entries(data)
+                .sort((a, b) => b[1] - a[1]);
+            
+            let tableHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>报告人</th>
+                            <th>报告数量</th>
+                            <th>占比</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            const total = reporters.reduce((sum, r) => sum + r[1], 0);
+            reporters.forEach((reporter, index) => {
+                const percentage = ((reporter[1] / total) * 100).toFixed(2);
+                tableHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${reporter[0]}</td>
+                        <td>${reporter[1]}</td>
+                        <td>${percentage}%</td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += '</tbody></table>';
+            document.getElementById('reporterTable').innerHTML = tableHtml;
+        }
+        
+        function updateProductTable() {
+            const data = processedData.product[currentCategory];
+            const products = Object.entries(data)
+                .sort((a, b) => b[1] - a[1]);
+            
+            let categoryTitle = '';
+            switch(currentCategory) {
+                case 'all': categoryTitle = '全部产品'; break;
+                case '有源': categoryTitle = '有源产品'; break;
+                case '无源': categoryTitle = '无源产品'; break;
+            }
+            
+            let tableHtml = `
+                <div style="margin-bottom: 15px;">
+                    <strong>${categoryTitle}统计：</strong>共 ${products.length} 种产品，总计 ${products.reduce((sum, p) => sum + p[1], 0)} 条报告
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>产品名称</th>
+                            <th>报告数量</th>
+                            <th>占比</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            const total = products.reduce((sum, p) => sum + p[1], 0);
+            if (total > 0) {
+                products.forEach((product, index) => {
+                    const percentage = ((product[1] / total) * 100).toFixed(2);
+                    tableHtml += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${product[0]}</td>
+                            <td>${product[1]}</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableHtml += `
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #666;">暂无${categoryTitle}数据</td>
+                    </tr>
+                `;
+            }
+            
+            tableHtml += '</tbody></table>';
+            document.getElementById('productStats').innerHTML = tableHtml;
+        }
+        
+        function exportToExcel() {
+            if (rawData.length === 0) {
+                alert('没有可导出的数据');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            
+            // 原始数据
+            const ws1 = XLSX.utils.json_to_sheet(rawData);
+            XLSX.utils.book_append_sheet(wb, ws1, "原始数据");
+            
+            // 统计汇总
+            const summaryData = [
+                ['统计项目', '数值'],
+                ['总报告数', Object.values(processedData.total).reduce((a, b) => a + b, 0)],
+                ['报告人总数', Object.keys(processedData.reporter).length],
+                ['产品种类', Object.keys(processedData.product).length],
+                ['时间统计维度', currentPeriod === 'month' ? '月份' : currentPeriod === 'quarter' ? '季度' : '年份']
+            ];
+            const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, ws2, "统计汇总");
+            
+            XLSX.writeFile(wb, `医疗器械不良事件统计分析_${new Date().getTime()}.xlsx`);
+        }
+        
+        function exportToCSV() {
+            if (rawData.length === 0) {
+                alert('没有可导出的数据');
+                return;
+            }
+            
+            const csv = Papa.unparse(rawData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `医疗器械不良事件数据_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>
