@@ -27,7 +27,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2E86AB 0%, #A23B72 100%);
             color: white;
             padding: 30px;
             border-radius: 10px;
@@ -50,7 +50,7 @@
         }
         
         .file-upload {
-            border: 2px dashed #667eea;
+            border: 2px dashed #2E86AB;
             border-radius: 10px;
             padding: 30px;
             text-align: center;
@@ -59,7 +59,7 @@
         }
         
         .file-upload:hover {
-            border-color: #764ba2;
+            border-color: #A23B72;
             background-color: #f0f2ff;
         }
         
@@ -68,7 +68,7 @@
         }
         
         .upload-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2E86AB 0%, #A23B72 100%);
             color: white;
             padding: 12px 25px;
             border: none;
@@ -91,24 +91,38 @@
             display: none;
         }
         
-        .time-selector {
+        .selector-group {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .selector-group h4 {
+            color: #333;
+            margin-right: 10px;
+            line-height: 40px;
+            min-width: 80px;
         }
         
         .time-btn {
             padding: 10px 20px;
-            border: 2px solid #667eea;
+            border: 2px solid #2E86AB;
             background: white;
-            color: #667eea;
+            color: #2E86AB;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 14px;
         }
         
         .time-btn.active {
-            background: #667eea;
+            background: #2E86AB;
+            color: white;
+        }
+        
+        .time-btn:hover {
+            background: #2E86AB;
             color: white;
         }
         
@@ -133,7 +147,7 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -149,6 +163,59 @@
             color: #333;
             margin-bottom: 15px;
             font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chart-btn {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .chart-btn.active {
+            background: #2E86AB;
+            color: white;
+            border-color: #2E86AB;
+        }
+        
+        .chart-btn:hover {
+            border-color: #2E86AB;
+        }
+        
+        .download-btn {
+            padding: 4px 8px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+        }
+        
+        .summary-text {
+            background: #f8f9fa;
+            border-left: 4px solid #2E86AB;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 6px 6px 0;
+            color: #495057;
+            line-height: 1.6;
         }
         
         .chart-container {
@@ -163,6 +230,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             overflow-x: auto;
+            margin-bottom: 20px;
         }
         
         .data-table {
@@ -196,7 +264,7 @@
         
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid #2E86AB;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -236,11 +304,23 @@
         </div>
         
         <div class="controls" id="controls">
-            <div class="time-selector">
-                <button class="time-btn active" data-period="month">月份统计</button>
-                <button class="time-btn" data-period="quarter">季度统计</button>
-                <button class="time-btn" data-period="year">年份统计</button>
+            <div class="selector-group">
+                <h4>年份筛选：</h4>
+                <div id="yearButtons"></div>
             </div>
+            
+            <div class="selector-group">
+                <h4>季度筛选：</h4>
+                <button class="time-btn active" data-quarter="all">全部</button>
+                <div id="quarterButtons"></div>
+            </div>
+            
+            <div class="selector-group">
+                <h4>月份筛选：</h4>
+                <button class="time-btn active" data-month="all">全部</button>
+                <div id="monthButtons"></div>
+            </div>
+            
             <div class="export-section">
                 <button class="export-btn" onclick="exportToExcel()">导出Excel</button>
                 <button class="export-btn" onclick="exportToCSV()">导出CSV</button>
@@ -249,60 +329,84 @@
         
         <div class="stats-grid" id="statsGrid" style="display: none;">
             <div class="stats-card">
-                <h3>报告总数量统计</h3>
-                <div id="totalStats"></div>
-                <div class="chart-container">
-                    <canvas id="totalChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stats-card">
-                <h3>审核状态统计</h3>
-                <div id="statusStats"></div>
+                <h3>
+                    报告情况统计
+                    <div class="chart-controls">
+                        <button class="chart-btn active" data-chart="status" data-type="line">📈</button>
+                        <button class="chart-btn" data-chart="status" data-type="bar">📊</button>
+                        <button class="chart-btn" data-chart="status" data-type="pie">🥧</button>
+                        <button class="download-btn" onclick="downloadChart('statusChart')">📊下载</button>
+                    </div>
+                </h3>
+                <div id="statusSummary" class="summary-text"></div>
                 <div class="chart-container">
                     <canvas id="statusChart"></canvas>
                 </div>
             </div>
             
             <div class="stats-card">
-                <h3>产品类别统计（审核通过）</h3>
-                <div id="categoryStats"></div>
+                <h3>
+                    产品类别统计（审核通过）
+                    <div class="chart-controls">
+                        <button class="chart-btn active" data-chart="category" data-type="line">📈</button>
+                        <button class="chart-btn" data-chart="category" data-type="bar">📊</button>
+                        <button class="chart-btn" data-chart="category" data-type="pie">🥧</button>
+                        <button class="download-btn" onclick="downloadChart('categoryChart')">📊下载</button>
+                    </div>
+                </h3>
+                <div id="categorySummary" class="summary-text"></div>
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
             
             <div class="stats-card">
-                <h3>伤害类型统计（审核通过）</h3>
-                <div id="injuryStats"></div>
+                <h3>
+                    伤害类型统计（审核通过）
+                    <div class="chart-controls">
+                        <button class="chart-btn active" data-chart="injury" data-type="line">📈</button>
+                        <button class="chart-btn" data-chart="injury" data-type="bar">📊</button>
+                        <button class="chart-btn" data-chart="injury" data-type="pie">🥧</button>
+                        <button class="download-btn" onclick="downloadChart('injuryChart')">📊下载</button>
+                    </div>
+                </h3>
+                <div id="injurySummary" class="summary-text"></div>
                 <div class="chart-container">
                     <canvas id="injuryChart"></canvas>
                 </div>
-            </div>
-            
-            <div class="stats-card">
-                <h3>报告人统计汇总</h3>
-                <div id="reporterTable"></div>
             </div>
         </div>
         
         <div class="table-container" id="productTable" style="display: none;">
             <h3>产品名称统计汇总（审核通过）</h3>
-            <div class="time-selector" style="margin-bottom: 20px;">
+            <div class="selector-group" style="margin-bottom: 20px;">
                 <button class="time-btn active" data-category="all" id="categoryAllBtn">全部</button>
-                <button class="time-btn" data-category="有源" id="categoryActiveBtn">有源</button>
-                <button class="time-btn" data-category="无源" id="categoryPassiveBtn">无源</button>
+                <button class="time-btn" data-category="有源" id="categoryActiveBtn">设备（有源）</button>
+                <button class="time-btn" data-category="无源" id="categoryPassiveBtn">耗材（无源）</button>
             </div>
             <div id="productStats"></div>
+        </div>
+        
+        <div class="table-container" id="reporterTable" style="display: none;">
+            <h3>报告人统计汇总</h3>
+            <div id="reporterStats"></div>
         </div>
     </div>
 
     <script>
         let rawData = [];
         let processedData = {};
-        let currentPeriod = 'month';
+        let currentYear = null;
+        let currentQuarter = 'all';
+        let currentMonth = 'all';
         let currentCategory = 'all';
+        let availableYears = [];
         let charts = {};
+        let chartTypes = {
+            status: 'line',
+            category: 'line',
+            injury: 'line'
+        };
         
         // 文件上传处理
         document.getElementById('fileInput').addEventListener('change', handleFileUpload);
@@ -322,28 +426,66 @@
             }
         });
         
-        // 时间维度切换
-        document.querySelectorAll('.time-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                if (e.target.dataset.period) {
-                    // 时间维度切换
-                    document.querySelectorAll('.time-btn[data-period]').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    currentPeriod = e.target.dataset.period;
-                    if (rawData.length > 0) {
-                        processData();
-                        updateAllCharts();
-                    }
-                } else if (e.target.dataset.category) {
-                    // 产品类别切换
-                    document.querySelectorAll('.time-btn[data-category]').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    currentCategory = e.target.dataset.category;
-                    if (rawData.length > 0) {
-                        updateProductTable();
-                    }
+        // 事件监听器
+        document.addEventListener('click', (e) => {
+            if (e.target.dataset.year) {
+                // 年份切换
+                document.querySelectorAll('.time-btn[data-year]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentYear = e.target.dataset.year;
+                if (rawData.length > 0) {
+                    processData();
+                    updateAllCharts();
                 }
-            });
+            } else if (e.target.dataset.quarter) {
+                // 季度切换
+                document.querySelectorAll('.time-btn[data-quarter]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentQuarter = e.target.dataset.quarter;
+                if (rawData.length > 0 && currentYear) {
+                    // 如果选择了特定季度，月份重置为全部
+                    if (currentQuarter !== 'all') {
+                        currentMonth = 'all';
+                        document.querySelectorAll('.time-btn[data-month]').forEach(b => b.classList.remove('active'));
+                        document.querySelector('.time-btn[data-month="all"]').classList.add('active');
+                    }
+                    processData();
+                    updateAllCharts();
+                }
+            } else if (e.target.dataset.month) {
+                // 月份切换
+                document.querySelectorAll('.time-btn[data-month]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentMonth = e.target.dataset.month;
+                if (rawData.length > 0 && currentYear) {
+                    // 如果选择了特定月份，季度重置为全部
+                    if (currentMonth !== 'all') {
+                        currentQuarter = 'all';
+                        document.querySelectorAll('.time-btn[data-quarter]').forEach(b => b.classList.remove('active'));
+                        document.querySelector('.time-btn[data-quarter="all"]').classList.add('active');
+                    }
+                    processData();
+                    updateAllCharts();
+                }
+            } else if (e.target.dataset.category) {
+                // 产品类别切换
+                document.querySelectorAll('.time-btn[data-category]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.dataset.category;
+                if (rawData.length > 0 && currentYear) {
+                    updateProductTable();
+                }
+            } else if (e.target.dataset.chart && e.target.dataset.type) {
+                // 图表类型切换
+                const chartName = e.target.dataset.chart;
+                const chartType = e.target.dataset.type;
+                
+                document.querySelectorAll(`[data-chart="${chartName}"]`).forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                chartTypes[chartName] = chartType;
+                updateSpecificChart(chartName);
+            }
         });
         
         function handleFileUpload(event) {
@@ -401,12 +543,27 @@
                     return;
                 }
                 
+                // 提取可用年份
+                extractAvailableYears();
+                
+                // 生成年份筛选按钮
+                generateYearButtons();
+                
+                // 生成季度和月份按钮
+                generateQuarterButtons();
+                generateMonthButtons();
+                
+                // 设置默认年份（最新年份）
+                currentYear = availableYears[availableYears.length - 1];
+                document.querySelector(`[data-year="${currentYear}"]`).classList.add('active');
+                
                 processData();
                 updateAllCharts();
                 
                 document.getElementById('controls').style.display = 'block';
                 document.getElementById('statsGrid').style.display = 'grid';
                 document.getElementById('productTable').style.display = 'block';
+                document.getElementById('reporterTable').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
                 
             } catch (error) {
@@ -416,9 +573,60 @@
             }
         }
         
+        function extractAvailableYears() {
+            const years = new Set();
+            rawData.forEach(row => {
+                const date = parseDate(row['报告日期']);
+                if (date) {
+                    years.add(date.getFullYear());
+                }
+            });
+            availableYears = Array.from(years).sort((a, b) => a - b);
+        }
+        
+        function generateYearButtons() {
+            const yearButtonsContainer = document.getElementById('yearButtons');
+            yearButtonsContainer.innerHTML = '';
+            
+            availableYears.forEach(year => {
+                const btn = document.createElement('button');
+                btn.className = 'time-btn';
+                btn.dataset.year = year.toString();
+                btn.textContent = year + '年';
+                yearButtonsContainer.appendChild(btn);
+            });
+        }
+        
+        function generateQuarterButtons() {
+            const quarterButtonsContainer = document.getElementById('quarterButtons');
+            quarterButtonsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'time-btn';
+                btn.dataset.quarter = `Q${i}`;
+                btn.textContent = `Q${i}`;
+                quarterButtonsContainer.appendChild(btn);
+            }
+        }
+        
+        function generateMonthButtons() {
+            const monthButtonsContainer = document.getElementById('monthButtons');
+            monthButtonsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 12; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'time-btn';
+                btn.dataset.month = i.toString();
+                btn.textContent = i + '月';
+                monthButtonsContainer.appendChild(btn);
+            }
+        }
+        
         function processData() {
+            if (!currentYear) return;
+            
             processedData = {
-                total: {},
                 status: {},
                 category: {},
                 injury: {},
@@ -430,60 +638,81 @@
                 }
             };
             
-            // 清理和验证数据
-            const validData = rawData.filter(row => {
-                return row['报告日期'] && row['报告日期'].toString().trim();
+            // 筛选当前年份的数据
+            let filteredData = rawData.filter(row => {
+                const date = parseDate(row['报告日期']);
+                return date && date.getFullYear().toString() === currentYear.toString();
             });
             
-            validData.forEach(row => {
+            // 进一步根据季度或月份筛选
+            if (currentQuarter !== 'all') {
+                filteredData = filteredData.filter(row => {
+                    const date = parseDate(row['报告日期']);
+                    if (!date) return false;
+                    const quarter = Math.ceil((date.getMonth() + 1) / 3);
+                    return `Q${quarter}` === currentQuarter;
+                });
+            } else if (currentMonth !== 'all') {
+                filteredData = filteredData.filter(row => {
+                    const date = parseDate(row['报告日期']);
+                    if (!date) return false;
+                    return (date.getMonth() + 1).toString() === currentMonth;
+                });
+            }
+            
+            // 根据当前筛选条件决定数据分组方式
+            let groupBy = 'month'; // 默认按月分组
+            if (currentQuarter !== 'all') {
+                groupBy = 'month'; // 选择特定季度时按月分组
+            } else if (currentMonth !== 'all') {
+                groupBy = 'day'; // 选择特定月份时按日分组
+            } else {
+                groupBy = 'quarter'; // 全年时按季度分组
+            }
+            
+            filteredData.forEach(row => {
                 const date = parseDate(row['报告日期']);
                 if (!date) return;
                 
-                const period = getPeriodKey(date, currentPeriod);
+                const period = getPeriodKey(date, groupBy);
                 const status = (row['经营企业使用单位报告状态'] || '').toString().trim();
                 const category = (row['产品类别'] || '').toString().trim();
                 const injury = (row['伤害'] || '').toString().trim();
                 const reporter = (row['报告人'] || '').toString().trim();
                 const product = (row['产品名称'] || '').toString().trim();
                 
-                // 1. 总数量统计
-                if (!processedData.total[period]) processedData.total[period] = 0;
-                processedData.total[period]++;
-                
-                // 2. 审核状态统计
+                // 1. 状态统计
                 if (!processedData.status[period]) processedData.status[period] = {};
                 if (status) {
                     if (!processedData.status[period][status]) processedData.status[period][status] = 0;
                     processedData.status[period][status]++;
                 }
                 
-                // 3. 产品类别统计（仅审核通过）
+                // 2. 产品类别统计（仅审核通过）
                 if (status === '审核通过' && category) {
                     if (!processedData.category[period]) processedData.category[period] = {};
                     if (!processedData.category[period][category]) processedData.category[period][category] = 0;
                     processedData.category[period][category]++;
                 }
                 
-                // 4. 伤害统计（仅审核通过）
+                // 3. 伤害统计（仅审核通过）
                 if (status === '审核通过' && injury) {
                     if (!processedData.injury[period]) processedData.injury[period] = {};
                     if (!processedData.injury[period][injury]) processedData.injury[period][injury] = 0;
                     processedData.injury[period][injury]++;
                 }
                 
-                // 5. 报告人统计
+                // 4. 报告人统计
                 if (reporter) {
                     if (!processedData.reporter[reporter]) processedData.reporter[reporter] = 0;
                     processedData.reporter[reporter]++;
                 }
                 
-                // 6. 产品名称统计（仅审核通过）
+                // 5. 产品名称统计（仅审核通过）
                 if (status === '审核通过' && product) {
-                    // 全部产品统计
                     if (!processedData.product.all[product]) processedData.product.all[product] = 0;
                     processedData.product.all[product]++;
                     
-                    // 按产品类别统计
                     if (category === '有源' || category === '无源') {
                         if (!processedData.product[category][product]) processedData.product[category][product] = 0;
                         processedData.product[category][product]++;
@@ -496,22 +725,21 @@
             if (!dateStr) return null;
             const str = dateStr.toString().trim();
             
-            // 处理多种日期格式
             const formats = [
-                /(\d{4})-(\d{1,2})-(\d{1,2})/,  // 2025-06-20
-                /(\d{4})\/(\d{1,2})\/(\d{1,2})/,  // 2025/06/20
-                /(\d{1,2})\/(\d{1,2})\/(\d{4})/,  // 06/20/2025
+                /(\d{4})-(\d{1,2})-(\d{1,2})/,
+                /(\d{4})\/(\d{1,2})\/(\d{1,2})/,
+                /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
             ];
             
             for (let format of formats) {
                 const match = str.match(format);
                 if (match) {
                     let year, month, day;
-                    if (format === formats[2]) { // MM/DD/YYYY
+                    if (format === formats[2]) {
                         month = parseInt(match[1]);
                         day = parseInt(match[2]);
                         year = parseInt(match[3]);
-                    } else { // YYYY-MM-DD or YYYY/MM/DD
+                    } else {
                         year = parseInt(match[1]);
                         month = parseInt(match[2]);
                         day = parseInt(match[3]);
@@ -526,30 +754,44 @@
             return null;
         }
         
-        function getPeriodKey(date, period) {
+        function getPeriodKey(date, groupBy) {
             const year = date.getFullYear();
             const month = date.getMonth() + 1;
+            const day = date.getDate();
             
-            switch(period) {
+            switch(groupBy) {
                 case 'month':
-                    return `${year}-${month.toString().padStart(2, '0')}`;
+                    return `${month}月`;
                 case 'quarter':
                     const quarter = Math.ceil(month / 3);
-                    return `${year}-Q${quarter}`;
-                case 'year':
-                    return year.toString();
+                    return `Q${quarter}`;
+                case 'day':
+                    return `${month}/${day}`;
                 default:
-                    return `${year}-${month.toString().padStart(2, '0')}`;
+                    return `${month}月`;
             }
         }
         
         function updateAllCharts() {
-            updateTotalChart();
             updateStatusChart();
             updateCategoryChart();
             updateInjuryChart();
             updateReporterTable();
             updateProductTable();
+        }
+        
+        function updateSpecificChart(chartName) {
+            switch(chartName) {
+                case 'status':
+                    updateStatusChart();
+                    break;
+                case 'category':
+                    updateCategoryChart();
+                    break;
+                case 'injury':
+                    updateInjuryChart();
+                    break;
+            }
         }
         
         function createChart(ctx, type, data, options = {}) {
@@ -558,22 +800,54 @@
                 charts[chartId].destroy();
             }
             
+            // 设置医疗专业配色
+            const colors = {
+                primary: '#2E86AB',
+                secondary: '#A23B72',
+                success: '#28A745',
+                warning: '#FFC107',
+                danger: '#DC3545',
+                info: '#17A2B8'
+            };
+            
+            // 为数据添加医疗风格渐变色
+            if (data.datasets) {
+                data.datasets.forEach((dataset, index) => {
+                    if (!dataset.backgroundColor) {
+                        const colorKeys = Object.keys(colors);
+                        const baseColor = colors[colorKeys[index % colorKeys.length]];
+                        dataset.backgroundColor = baseColor;
+                        dataset.borderColor = baseColor;
+                        
+                        if (type === 'line') {
+                            dataset.backgroundColor = baseColor + '20'; // 透明度
+                            dataset.fill = false;
+                            dataset.tension = 0.4;
+                        }
+                    }
+                });
+            }
+            
             const defaultOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: type === 'pie' ? 'bottom' : 'top',
+                    }
+                },
+                scales: type === 'pie' ? {} : {
+                    y: {
+                        beginAtZero: true,
+                        grace: '15%', // Y轴顶部留白
+                        grid: {
+                            color: '#e9ecef',
+                            lineWidth: 1
+                        }
                     },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: function(value) {
-                            return value;
-                        },
-                        font: {
-                            size: 12,
-                            weight: 'bold'
+                    x: {
+                        grid: {
+                            display: false
                         }
                     }
                 }
@@ -585,57 +859,96 @@
                 options: {...defaultOptions, ...options},
                 plugins: [{
                     afterDatasetsDraw: function(chart) {
+                        if (type === 'pie') return; // 饼图不需要数值标签
+                        
                         const ctx = chart.ctx;
-                        chart.data.datasets.forEach(function(dataset, i) {
-                            const meta = chart.getDatasetMeta(i);
+                        ctx.save();
+                        
+                        chart.data.datasets.forEach(function(dataset, datasetIndex) {
+                            const meta = chart.getDatasetMeta(datasetIndex);
                             if (!meta.hidden) {
                                 meta.data.forEach(function(element, index) {
+                                    const value = dataset.data[index];
+                                    if (value === 0) return;
+                                    
                                     ctx.fillStyle = '#333';
                                     ctx.font = 'bold 12px Arial';
                                     ctx.textAlign = 'center';
-                                    ctx.textBaseline = 'bottom';
+                                    ctx.textBaseline = 'middle';
                                     
-                                    const dataString = dataset.data[index].toString();
                                     const position = element.tooltipPosition();
                                     
+                                    // 智能标签定位 - 统一外置标签
                                     if (chart.config.options.indexAxis === 'y') {
-                                        // 水平条形图
+                                        // 水平条形图 - 标签显示在条形右侧
                                         ctx.textAlign = 'left';
-                                        ctx.fillText(dataString, position.x + 5, position.y + 3);
+                                        ctx.fillText(value.toString(), position.x + 8, position.y);
                                     } else {
-                                        // 垂直柱状图
-                                        ctx.fillText(dataString, position.x, position.y - 5);
+                                        // 垂直柱状图/折线图 - 标签显示在柱子上方
+                                        ctx.fillText(value.toString(), position.x, position.y - 8);
                                     }
                                 });
                             }
                         });
+                        
+                        ctx.restore();
                     }
                 }]
             });
         }
         
-        function updateTotalChart() {
-            const data = processedData.total;
-            const periods = Object.keys(data).sort();
-            const values = periods.map(p => data[p]);
+        function generateSummaryText() {
+            if (!currentYear) return '';
             
-            const ctx = document.getElementById('totalChart').getContext('2d');
-            createChart(ctx, 'bar', {
-                labels: periods,
-                datasets: [{
-                    label: '报告数量',
-                    data: values,
-                    backgroundColor: '#667eea',
-                    borderColor: '#667eea',
-                    borderWidth: 1
-                }]
+            // 根据当前筛选条件生成对应的小结文字
+            let periodText = `${currentYear}年`;
+            if (currentQuarter !== 'all') {
+                periodText += `${currentQuarter}季度`;
+            } else if (currentMonth !== 'all') {
+                periodText += `${currentMonth}月`;
+            } else {
+                periodText += '全年';
+            }
+            
+            // 计算当前筛选条件下的总数和各项统计
+            let totalReports = 0;
+            let approvedReports = 0;
+            let deviceReports = 0;
+            let consumableReports = 0;
+            let severeInjuryReports = 0;
+            
+            // 统计当前筛选数据
+            const statusData = processedData.status;
+            const periods = Object.keys(statusData);
+            
+            periods.forEach(period => {
+                Object.keys(statusData[period]).forEach(status => {
+                    totalReports += statusData[period][status];
+                    if (status === '审核通过') {
+                        approvedReports += statusData[period][status];
+                    }
+                });
             });
             
-            // 更新统计文字
-            document.getElementById('totalStats').innerHTML = `
-                <p>总计：${values.reduce((a, b) => a + b, 0)} 条报告</p>
-                <p>时间范围：${periods.length > 0 ? periods[0] + ' 至 ' + periods[periods.length - 1] : '无数据'}</p>
-            `;
+            // 计算产品类别
+            const categoryData = processedData.category;
+            Object.keys(categoryData).forEach(period => {
+                deviceReports += categoryData[period]['有源'] || 0;
+                consumableReports += categoryData[period]['无源'] || 0;
+            });
+            
+            // 计算严重伤害
+            const injuryData = processedData.injury;
+            Object.keys(injuryData).forEach(period => {
+                severeInjuryReports += injuryData[period]['严重伤害'] || 0;
+            });
+            
+            const approvedRate = totalReports > 0 ? ((approvedReports / totalReports) * 100).toFixed(1) : 0;
+            const deviceRate = approvedReports > 0 ? ((deviceReports / approvedReports) * 100).toFixed(1) : 0;
+            const consumableRate = approvedReports > 0 ? ((consumableReports / approvedReports) * 100).toFixed(1) : 0;
+            const severeRate = approvedReports > 0 ? ((severeInjuryReports / approvedReports) * 100).toFixed(1) : 0;
+            
+            return `${periodText}共上报医疗器械不良事件报告${totalReports}条，其中审核通过${approvedReports}条（占${approvedRate}%），审核通过的报告中，设备（有源医疗器械）报告${deviceReports}条（占${deviceRate}%），耗材（无源医疗器械）报告${consumableReports}条（占${consumableRate}%），严重伤害报告${severeInjuryReports}条（占${severeRate}%）。`;
         }
         
         function updateStatusChart() {
@@ -652,24 +965,37 @@
             const datasets = Array.from(statusTypes).map((status, index) => ({
                 label: status,
                 data: periods.map(p => (data[p] && data[p][status]) || 0),
-                backgroundColor: index === 0 ? '#28a745' : '#dc3545',
-                borderColor: index === 0 ? '#28a745' : '#dc3545',
-                borderWidth: 1
             }));
             
             const ctx = document.getElementById('statusChart').getContext('2d');
-            createChart(ctx, 'bar', {
-                labels: periods,
-                datasets: datasets
-            });
+            const chartType = chartTypes.status;
             
-            // 更新统计文字
-            let statsHtml = '';
-            statusTypes.forEach(status => {
-                const total = periods.reduce((sum, p) => sum + ((data[p] && data[p][status]) || 0), 0);
-                statsHtml += `<p>${status}：${total} 条</p>`;
-            });
-            document.getElementById('statusStats').innerHTML = statsHtml;
+            let chartData;
+            if (chartType === 'pie') {
+                // 饼图显示总计数据
+                const totals = {};
+                statusTypes.forEach(status => {
+                    totals[status] = periods.reduce((sum, p) => sum + ((data[p] && data[p][status]) || 0), 0);
+                });
+                
+                chartData = {
+                    labels: Object.keys(totals),
+                    datasets: [{
+                        data: Object.values(totals),
+                        backgroundColor: ['#28A745', '#DC3545', '#FFC107', '#17A2B8']
+                    }]
+                };
+            } else {
+                chartData = {
+                    labels: periods,
+                    datasets: datasets
+                };
+            }
+            
+            createChart(ctx, chartType, chartData);
+            
+            // 更新小结文字
+            document.getElementById('statusSummary').innerHTML = generateSummaryText();
         }
         
         function updateCategoryChart() {
@@ -677,7 +1003,7 @@
             const periods = Object.keys(data).sort();
             
             if (periods.length === 0) {
-                document.getElementById('categoryStats').innerHTML = '<p>无审核通过数据</p>';
+                document.getElementById('categorySummary').innerHTML = '当前筛选条件下无审核通过的数据';
                 return;
             }
             
@@ -686,27 +1012,39 @@
                 Object.keys(data[p] || {}).forEach(c => categoryTypes.add(c));
             });
             
-            const datasets = Array.from(categoryTypes).map((category, index) => ({
-                label: category,
+            const datasets = Array.from(categoryTypes).map((category) => ({
+                label: category === '有源' ? '设备（有源）' : '耗材（无源）',
                 data: periods.map(p => (data[p] && data[p][category]) || 0),
-                backgroundColor: index === 0 ? '#17a2b8' : '#ffc107',
-                borderColor: index === 0 ? '#17a2b8' : '#ffc107',
-                borderWidth: 1
             }));
             
             const ctx = document.getElementById('categoryChart').getContext('2d');
-            createChart(ctx, 'bar', {
-                labels: periods,
-                datasets: datasets
-            });
+            const chartType = chartTypes.category;
             
-            // 更新统计文字
-            let statsHtml = '';
-            categoryTypes.forEach(category => {
-                const total = periods.reduce((sum, p) => sum + ((data[p] && data[p][category]) || 0), 0);
-                statsHtml += `<p>${category}：${total} 条</p>`;
-            });
-            document.getElementById('categoryStats').innerHTML = statsHtml;
+            let chartData;
+            if (chartType === 'pie') {
+                const totals = {};
+                categoryTypes.forEach(category => {
+                    const label = category === '有源' ? '设备（有源）' : '耗材（无源）';
+                    totals[label] = periods.reduce((sum, p) => sum + ((data[p] && data[p][category]) || 0), 0);
+                });
+                
+                chartData = {
+                    labels: Object.keys(totals),
+                    datasets: [{
+                        data: Object.values(totals),
+                        backgroundColor: ['#17A2B8', '#FFC107']
+                    }]
+                };
+            } else {
+                chartData = {
+                    labels: periods,
+                    datasets: datasets
+                };
+            }
+            
+            createChart(ctx, chartType, chartData);
+            
+            document.getElementById('categorySummary').innerHTML = generateSummaryText();
         }
         
         function updateInjuryChart() {
@@ -714,7 +1052,7 @@
             const periods = Object.keys(data).sort();
             
             if (periods.length === 0) {
-                document.getElementById('injuryStats').innerHTML = '<p>无审核通过数据</p>';
+                document.getElementById('injurySummary').innerHTML = '当前筛选条件下无审核通过的数据';
                 return;
             }
             
@@ -723,27 +1061,38 @@
                 Object.keys(data[p] || {}).forEach(i => injuryTypes.add(i));
             });
             
-            const datasets = Array.from(injuryTypes).map((injury, index) => ({
+            const datasets = Array.from(injuryTypes).map((injury) => ({
                 label: injury,
                 data: periods.map(p => (data[p] && data[p][injury]) || 0),
-                backgroundColor: index === 0 ? '#fd7e14' : '#e83e8c',
-                borderColor: index === 0 ? '#fd7e14' : '#e83e8c',
-                borderWidth: 1
             }));
             
             const ctx = document.getElementById('injuryChart').getContext('2d');
-            createChart(ctx, 'bar', {
-                labels: periods,
-                datasets: datasets
-            });
+            const chartType = chartTypes.injury;
             
-            // 更新统计文字
-            let statsHtml = '';
-            injuryTypes.forEach(injury => {
-                const total = periods.reduce((sum, p) => sum + ((data[p] && data[p][injury]) || 0), 0);
-                statsHtml += `<p>${injury}：${total} 条</p>`;
-            });
-            document.getElementById('injuryStats').innerHTML = statsHtml;
+            let chartData;
+            if (chartType === 'pie') {
+                const totals = {};
+                injuryTypes.forEach(injury => {
+                    totals[injury] = periods.reduce((sum, p) => sum + ((data[p] && data[p][injury]) || 0), 0);
+                });
+                
+                chartData = {
+                    labels: Object.keys(totals),
+                    datasets: [{
+                        data: Object.values(totals),
+                        backgroundColor: ['#FD7E14', '#E83E8C', '#6610F2', '#20C997']
+                    }]
+                };
+            } else {
+                chartData = {
+                    labels: periods,
+                    datasets: datasets
+                };
+            }
+            
+            createChart(ctx, chartType, chartData);
+            
+            document.getElementById('injurySummary').innerHTML = generateSummaryText();
         }
         
         function updateReporterTable() {
@@ -751,7 +1100,19 @@
             const reporters = Object.entries(data)
                 .sort((a, b) => b[1] - a[1]);
             
+            let periodText = `${currentYear}年`;
+            if (currentQuarter !== 'all') {
+                periodText += `${currentQuarter}季度`;
+            } else if (currentMonth !== 'all') {
+                periodText += `${currentMonth}月`;
+            } else {
+                periodText += '全年';
+            }
+            
             let tableHtml = `
+                <div style="margin-bottom: 15px;">
+                    <strong>${periodText}报告人统计：</strong>共 ${reporters.length} 个报告人，总计 ${reporters.reduce((sum, r) => sum + r[1], 0)} 条报告
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -765,20 +1126,28 @@
             `;
             
             const total = reporters.reduce((sum, r) => sum + r[1], 0);
-            reporters.forEach((reporter, index) => {
-                const percentage = ((reporter[1] / total) * 100).toFixed(2);
+            if (reporters.length > 0) {
+                reporters.forEach((reporter, index) => {
+                    const percentage = ((reporter[1] / total) * 100).toFixed(2);
+                    tableHtml += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${reporter[0]}</td>
+                            <td>${reporter[1]}</td>
+                            <td>${percentage}%</td>
+                        </tr>
+                    `;
+                });
+            } else {
                 tableHtml += `
                     <tr>
-                        <td>${index + 1}</td>
-                        <td>${reporter[0]}</td>
-                        <td>${reporter[1]}</td>
-                        <td>${percentage}%</td>
+                        <td colspan="4" style="text-align: center; color: #666;">当前筛选条件下暂无数据</td>
                     </tr>
                 `;
-            });
+            }
             
             tableHtml += '</tbody></table>';
-            document.getElementById('reporterTable').innerHTML = tableHtml;
+            document.getElementById('reporterStats').innerHTML = tableHtml;
         }
         
         function updateProductTable() {
@@ -789,13 +1158,22 @@
             let categoryTitle = '';
             switch(currentCategory) {
                 case 'all': categoryTitle = '全部产品'; break;
-                case '有源': categoryTitle = '有源产品'; break;
-                case '无源': categoryTitle = '无源产品'; break;
+                case '有源': categoryTitle = '设备（有源）'; break;
+                case '无源': categoryTitle = '耗材（无源）'; break;
+            }
+            
+            let periodText = `${currentYear}年`;
+            if (currentQuarter !== 'all') {
+                periodText += `${currentQuarter}季度`;
+            } else if (currentMonth !== 'all') {
+                periodText += `${currentMonth}月`;
+            } else {
+                periodText += '全年';
             }
             
             let tableHtml = `
                 <div style="margin-bottom: 15px;">
-                    <strong>${categoryTitle}统计：</strong>共 ${products.length} 种产品，总计 ${products.reduce((sum, p) => sum + p[1], 0)} 条报告
+                    <strong>${categoryTitle}统计（${periodText}）：</strong>共 ${products.length} 种产品，总计 ${products.reduce((sum, p) => sum + p[1], 0)} 条报告
                 </div>
                 <table class="data-table">
                     <thead>
@@ -825,13 +1203,58 @@
             } else {
                 tableHtml += `
                     <tr>
-                        <td colspan="4" style="text-align: center; color: #666;">暂无${categoryTitle}数据</td>
+                        <td colspan="4" style="text-align: center; color: #666;">当前筛选条件下暂无${categoryTitle}数据</td>
                     </tr>
                 `;
             }
             
             tableHtml += '</tbody></table>';
             document.getElementById('productStats').innerHTML = tableHtml;
+        }
+        
+        function downloadChart(chartId) {
+            const chart = charts[chartId];
+            if (!chart) {
+                alert('图表未找到');
+                return;
+            }
+            
+            // 创建下载选项
+            const options = [
+                { format: 'png', label: 'PNG高清图片' },
+                { format: 'pdf', label: 'PDF矢量图' },
+                { format: 'jpg', label: 'JPG压缩图片' }
+            ];
+            
+            const selection = prompt('请选择下载格式：\n1. PNG高清图片\n2. PDF矢量图\n3. JPG压缩图片\n\n请输入数字 1-3：');
+            
+            if (!selection || selection < 1 || selection > 3) return;
+            
+            const selectedOption = options[selection - 1];
+            const canvas = chart.canvas;
+            
+            if (selectedOption.format === 'png') {
+                const url = canvas.toDataURL('image/png');
+                downloadFile(url, `${chartId}_${currentYear}年_${new Date().getTime()}.png`);
+            } else if (selectedOption.format === 'jpg') {
+                const url = canvas.toDataURL('image/jpeg', 0.9);
+                downloadFile(url, `${chartId}_${currentYear}年_${new Date().getTime()}.jpg`);
+            } else if (selectedOption.format === 'pdf') {
+                // 简化版PDF下载（实际为PNG格式）
+                const url = canvas.toDataURL('image/png');
+                downloadFile(url, `${chartId}_${currentYear}年_${new Date().getTime()}.png`);
+                alert('PDF格式下载功能开发中，已为您下载PNG格式');
+            }
+        }
+        
+        function downloadFile(url, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         function exportToExcel() {
@@ -847,17 +1270,26 @@
             XLSX.utils.book_append_sheet(wb, ws1, "原始数据");
             
             // 统计汇总
+            let periodText = `${currentYear}年`;
+            if (currentQuarter !== 'all') {
+                periodText += `${currentQuarter}季度`;
+            } else if (currentMonth !== 'all') {
+                periodText += `${currentMonth}月`;
+            } else {
+                periodText += '全年';
+            }
+            
             const summaryData = [
                 ['统计项目', '数值'],
-                ['总报告数', Object.values(processedData.total).reduce((a, b) => a + b, 0)],
+                ['分析时间', periodText],
+                ['数据总条数', rawData.length],
                 ['报告人总数', Object.keys(processedData.reporter).length],
-                ['产品种类', Object.keys(processedData.product).length],
-                ['时间统计维度', currentPeriod === 'month' ? '月份' : currentPeriod === 'quarter' ? '季度' : '年份']
+                ['产品种类', Object.keys(processedData.product.all).length]
             ];
             const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
             XLSX.utils.book_append_sheet(wb, ws2, "统计汇总");
             
-            XLSX.writeFile(wb, `医疗器械不良事件统计分析_${new Date().getTime()}.xlsx`);
+            XLSX.writeFile(wb, `医疗器械不良事件统计分析_${periodText}_${new Date().getTime()}.xlsx`);
         }
         
         function exportToCSV() {
@@ -871,7 +1303,17 @@
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `医疗器械不良事件数据_${new Date().getTime()}.csv`);
+            
+            let periodText = `${currentYear}年`;
+            if (currentQuarter !== 'all') {
+                periodText += `${currentQuarter}季度`;
+            } else if (currentMonth !== 'all') {
+                periodText += `${currentMonth}月`;
+            } else {
+                periodText += '全年';
+            }
+            
+            link.setAttribute('download', `医疗器械不良事件数据_${periodText}_${new Date().getTime()}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
